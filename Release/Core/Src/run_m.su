@@ -1,0 +1,4 @@
+../Core/Src/run_m.c:60:6:eje_iniciacion	32	static
+../Core/Src/run_m.c:92:6:despulsar_eje	32	static,ignoring_inline_asm
+../Core/Src/run_m.c:111:6:E_stop_rutina	80	static,ignoring_inline_asm
+../Core/Src/run_m.c:155:6:run_motores	112	static,ignoring_inline_asm

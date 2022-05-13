@@ -1,0 +1,4 @@
+../Core/Src/home_m.c:83:6:homing_eje	40	static,ignoring_inline_asm
+../Core/Src/home_m.c:162:6:home_selec_eje	8	static
+../Core/Src/home_m.c:50:6:home_secuencia	80	static
+../Core/Src/home_m.c:8:6:home_inicio_sec	64	static
