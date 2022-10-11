@@ -38,6 +38,7 @@ extern "C" {
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
 
+/*
 #ifndef EJE_TEST
 #define EJE_TEST
 
@@ -62,14 +63,15 @@ struct eje_str{//parametros fijos, levantados de la flash en el arranque o en el
 	uint16_t home_porcentaje_vel;
 	double home_ubic_mm;
 
-	uint16_t dir_pin;
-	uint16_t step_pin;
-	uint16_t home_pin;
+	uint16_t dir_pin;	//puerto B
+	uint16_t step_pin;	//puerto B
+	uint16_t home_pin;	//puerto A
 
 
 
 };
 #endif
+*/
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -82,8 +84,6 @@ struct eje_str{//parametros fijos, levantados de la flash en el arranque o en el
 
 /* USER CODE END EM */
 
-void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
-
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 
@@ -92,22 +92,20 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define Home_C_Pin GPIO_PIN_0
-#define Home_C_GPIO_Port GPIOA
-#define Home_B_Pin GPIO_PIN_1
-#define Home_B_GPIO_Port GPIOA
+#define LED_pin_Pin GPIO_PIN_13
+#define LED_pin_GPIO_Port GPIOC
+#define Home_X_Pin GPIO_PIN_0
+#define Home_X_GPIO_Port GPIOA
+#define Home_Y_Pin GPIO_PIN_1
+#define Home_Y_GPIO_Port GPIOA
 #define Home_Z_Pin GPIO_PIN_2
 #define Home_Z_GPIO_Port GPIOA
-#define Home_Y_Pin GPIO_PIN_3
-#define Home_Y_GPIO_Port GPIOA
-#define Home_X_Pin GPIO_PIN_4
-#define Home_X_GPIO_Port GPIOA
+#define Home_B_Pin GPIO_PIN_3
+#define Home_B_GPIO_Port GPIOA
+#define Home_C_Pin GPIO_PIN_4
+#define Home_C_GPIO_Port GPIOA
 #define E_Stop_Pin GPIO_PIN_5
 #define E_Stop_GPIO_Port GPIOA
-#define Luz_up_Pin GPIO_PIN_6
-#define Luz_up_GPIO_Port GPIOA
-#define Luz_bottom_Pin GPIO_PIN_7
-#define Luz_bottom_GPIO_Port GPIOA
 #define Step_X_Pin GPIO_PIN_0
 #define Step_X_GPIO_Port GPIOB
 #define Dir_X_Pin GPIO_PIN_1
@@ -130,10 +128,6 @@ void Error_Handler(void);
 #define Dir_B_GPIO_Port GPIOB
 #define Enable_motors_Pin GPIO_PIN_5
 #define Enable_motors_GPIO_Port GPIOB
-#define Vacuum_out_Pin GPIO_PIN_6
-#define Vacuum_out_GPIO_Port GPIOB
-#define Sensing_vac_in_Pin GPIO_PIN_7
-#define Sensing_vac_in_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
@@ -143,5 +137,3 @@ void Error_Handler(void);
 #endif
 
 #endif /* __MAIN_H */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -22,7 +22,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "morcom_v2.h"
+#include "stdio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -40,9 +41,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-TIM_HandleTypeDef htim3;
-
-UART_HandleTypeDef huart1;
+ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 
@@ -52,42 +51,7 @@ UART_HandleTypeDef huart1;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
-static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
-#define tamano_buffer_UART 256
-#define maxima_cant_lineas 10
-uint8_t bufferUART[tamano_buffer_UART][maxima_cant_lineas];
-uint8_t indiceBuferLINEA=0;
-uint8_t indiceBuferUART=0;
-uint8_t auxCaracterInSerie;
-uint8_t home_inicio=0;
-const uint8_t tamano_vector=70;
-uint32_t vector_datos_interfaz[256];
-float version_float = 1.0;
-uint32_t inicioPagina_flash=0x08018000;//, fin en 0x0801fff0
-uint8_t parada_de_emergencia=0;
-
-struct eje_str X,Y,Z,B,C;
-extern void run_motores(double,double);
-extern void despulsar_eje(struct eje_str);
-void despulsar_limite_arranque(struct eje_str );
-void analizar_switch_arranque();
-extern void home_secuencia();
-extern void home_inicio_sec (uint8_t);
-double string_to_double(uint8_t*,uint8_t);
-void analizarLineaUART(uint8_t);
-void print_G0_fin_and_coordenadas();
-void print_double(double);
-uint8_t _HEX_to_int(char );
-void vector_to_RAM(void);
-void vector_to_Flash(void);
-void Flash_to_vector(void);
-void print_vecotr(void);
-int __io_putchar(int ch){//para el printf
-	HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 100);
-	return ch;
-}
-
 
 /* USER CODE END PFP */
 
@@ -125,106 +89,24 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
-  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
-  HAL_GPIO_WritePin(Enable_motors_GPIO_Port, Enable_motors_Pin, 1);//apagar motores
-  HAL_UART_Receive_IT(&huart1, &auxCaracterInSerie, 1);
+  /********************************************************************************
+   *                     INITIALIZATION MORCOM V2
+   ********************************************************************************/
+  morcom_init();
 
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
-  Flash_to_vector();
-  vector_to_RAM();
-/*
-  X.v_max=1500;
-  X.acc=10000;
-  X.porcentaje_v_min=2;
-  X.step_mm=10;
-  X.mm_actual=0;
-  X.mm_goto=0;
-
-  Y.v_max=1500;
-  Y.acc=10000;
-  Y.porcentaje_v_min=2;
-  Y.step_mm=10;
-  Y.mm_actual=0;
-  Y.mm_goto=0;
-
-  Z.v_max=1500;
-  Z.acc=10000;
-  Z.porcentaje_v_min=2;
-  Z.step_mm=10;
-  Z.mm_actual=0;
-  Z.mm_goto=0;
-
-  B.v_max=1500;
-  B.acc=10000;
-  B.porcentaje_v_min=12;
-  B.step_mm=10;
-  B.mm_actual=0;
-  B.mm_goto=0;
-
-  C.v_max=1500;
-  C.acc=10000;
-  C.porcentaje_v_min=12;
-  C.step_mm=10;
-  C.mm_actual=0;
-  C.mm_goto=0;*/
-  home_inicio_sec(home_inicio);
-  uint8_t N_linea_actual=0;
-
-  X.step_pin=Step_X_Pin;//puerto B
-  X.dir_pin=Dir_X_Pin;//puerto B
-  X.home_pin=Home_X_Pin;//puerto A
-
-  Y.step_pin=Step_Y_Pin;
-  Y.dir_pin=Dir_Y_Pin;
-  Y.home_pin=Home_Y_Pin;
-
-  Z.step_pin=Step_Z_Pin;
-  Z.dir_pin=Dir_Z_Pin;
-  Z.home_pin=Home_Z_Pin;
-
-  B.step_pin=Step_B_Pin;
-  B.dir_pin=Dir_B_Pin;
-  B.home_pin=Home_B_Pin;
-
-  C.step_pin=Step_C_Pin;
-  C.dir_pin=Dir_C_Pin;
-  C.home_pin=Home_C_Pin;
-
-
-  uint32_t contador=0;
-  printf("Test_commit sin_PPS4");
-  printf("Test_commit sin_PPS5");
   while (1)
   {
+	  /********************************************************************************
+	  *                     RUNNING MORCOM V2
+	  ********************************************************************************/
+	  morcom_run();
 
-	  /*contador++;
-	  if(contador%300000==0){
-		  printf("EXYZBC\n");
-		  printf("%i%i%i%i%i%i\n",HAL_GPIO_ReadPin(GPIOA, E_Stop_Pin),HAL_GPIO_ReadPin(GPIOA, Home_X_Pin),HAL_GPIO_ReadPin(GPIOA, Home_Y_Pin),HAL_GPIO_ReadPin(GPIOA, Home_Z_Pin),HAL_GPIO_ReadPin(GPIOA, Home_B_Pin),HAL_GPIO_ReadPin(GPIOA, Home_C_Pin));
-
-	  }*/
-	  if(GPIOA -> IDR & E_Stop_Pin)	parada_de_emergencia=1;
-	  else	  parada_de_emergencia=0;
-
-	  if(N_linea_actual!=indiceBuferLINEA){
-		  //uint8_t i=0;
-		  //while(bufferUART[i][N_linea_actual]!=0) {
-			//  printf("%c",bufferUART[i][N_linea_actual]);
-			//  i++;
-		  //}
-		  //printf("\n");
-		  analizarLineaUART(N_linea_actual);
-		  N_linea_actual++;
-		  if(N_linea_actual>maxima_cant_lineas)	N_linea_actual=0;
-	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -255,6 +137,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+
   /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
@@ -268,69 +151,6 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-}
-
-/**
-  * @brief TIM3 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_TIM3_Init(void)
-{
-
-  /* USER CODE BEGIN TIM3_Init 0 */
-
-  /* USER CODE END TIM3_Init 0 */
-
-  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-  TIM_MasterConfigTypeDef sMasterConfig = {0};
-  TIM_OC_InitTypeDef sConfigOC = {0};
-
-  /* USER CODE BEGIN TIM3_Init 1 */
-
-  /* USER CODE END TIM3_Init 1 */
-  htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 0;
-  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 65535;
-  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV2;
-  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
-  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 0;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN TIM3_Init 2 */
-
-  /* USER CODE END TIM3_Init 2 */
-  HAL_TIM_MspPostInit(&htim3);
-
 }
 
 /**
@@ -376,48 +196,51 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(LED_pin_GPIO_Port, LED_pin_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, Step_X_Pin|Dir_X_Pin|Step_Y_Pin|Dir_Y_Pin
                           |Step_Z_Pin|Dir_Z_Pin|Step_C_Pin|Dir_C_Pin
-                          |Step_B_Pin|Dir_B_Pin|Enable_motors_Pin|Vacuum_out_Pin
-                          |GPIO_PIN_8|GPIO_PIN_9, GPIO_PIN_RESET);
+                          |Step_B_Pin|Dir_B_Pin|Enable_motors_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : Home_C_Pin Home_B_Pin Home_Z_Pin Home_Y_Pin
-                           Home_X_Pin E_Stop_Pin */
-  GPIO_InitStruct.Pin = Home_C_Pin|Home_B_Pin|Home_Z_Pin|Home_Y_Pin
-                          |Home_X_Pin|E_Stop_Pin;
+  /*Configure GPIO pin : LED_pin_Pin */
+  GPIO_InitStruct.Pin = LED_pin_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(LED_pin_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : Home_X_Pin Home_Y_Pin Home_Z_Pin Home_B_Pin
+                           Home_C_Pin E_Stop_Pin */
+  GPIO_InitStruct.Pin = Home_X_Pin|Home_Y_Pin|Home_Z_Pin|Home_B_Pin
+                          |Home_C_Pin|E_Stop_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : Step_X_Pin Dir_X_Pin Step_Y_Pin Dir_Y_Pin
                            Step_Z_Pin Dir_Z_Pin Step_C_Pin Dir_C_Pin
-                           Step_B_Pin Dir_B_Pin Enable_motors_Pin Vacuum_out_Pin
-                           PB8 PB9 */
+                           Step_B_Pin Dir_B_Pin Enable_motors_Pin */
   GPIO_InitStruct.Pin = Step_X_Pin|Dir_X_Pin|Step_Y_Pin|Dir_Y_Pin
                           |Step_Z_Pin|Dir_Z_Pin|Step_C_Pin|Dir_C_Pin
-                          |Step_B_Pin|Dir_B_Pin|Enable_motors_Pin|Vacuum_out_Pin
-                          |GPIO_PIN_8|GPIO_PIN_9;
+                          |Step_B_Pin|Dir_B_Pin|Enable_motors_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : Sensing_vac_in_Pin */
-  GPIO_InitStruct.Pin = Sensing_vac_in_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(Sensing_vac_in_GPIO_Port, &GPIO_InitStruct);
 
 }
 
 /* USER CODE BEGIN 4 */
 
 
+/*
 uint16_t index_linea_UART=0;
 uint32_t mensaje_linea_UART=0;
 double G_value=0,P_value=0,S_value=0,F_value=0,M_value=0,X_value=0,Y_value=0,Z_value=0,B_value=0,C_value=0;
@@ -574,7 +397,8 @@ void analizarLineaUART(uint8_t N_linea){
 		printf("index: %i , value: %i\n",index_linea_UART,mensaje_linea_UART);
 	}
 	for(uint16_t i=0;i<tamano_buffer_UART;i++) bufferUART[i][N_linea]=0;
-}
+}*/
+/*
 void print_G0_fin_and_coordenadas(){
 if(modo_coord_absolutas==0) printf("RelX");
 else printf("AbsX");
@@ -590,22 +414,9 @@ print_double(((double)B.step_mm_actual)/B.step_mm);
 printf("\n");
 printf("G0_fin\n");
 }
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)//por cada caracter que llegue entra a esta interrupcion, el dato esta en auxData bla bla bla
-{
-	if(auxCaracterInSerie=='\n'){
-		indiceBuferUART=0;
-		indiceBuferLINEA++;
-		if(indiceBuferLINEA>maxima_cant_lineas) indiceBuferLINEA=0;
-	}else{
-		if(indiceBuferUART<tamano_buffer_UART-1){
-			bufferUART[indiceBuferUART][indiceBuferLINEA]=auxCaracterInSerie;
-			indiceBuferUART++;
-			bufferUART[indiceBuferUART][indiceBuferLINEA]=0;
-		}
-	}
-	HAL_UART_Receive_IT(&huart1, &auxCaracterInSerie, 1);
-}
+*/
 
+/*  CODIGO MORCOM v1
 void vector_to_RAM(){
 	X.v_max= vector_datos_interfaz[0x10];
 	Y.v_max= vector_datos_interfaz[0x11];
@@ -753,6 +564,8 @@ void despulsar_limite_arranque(struct eje_str eje){
 	HAL_GPIO_TogglePin(GPIOB, eje.dir_pin);//toggleo una vez mas porque despues la funcion despulsar_eje hace un toggle
 	if(eje.home_act)  despulsar_eje(eje);
 }
+*/
+
 
 /* USER CODE END 4 */
 
@@ -787,5 +600,3 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
