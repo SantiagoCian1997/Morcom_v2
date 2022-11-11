@@ -89,7 +89,7 @@ void axes_init(struct eje_str *eje){
 	(*eje).step_1_v3 = (*eje).distancia_v3 - (*eje).step_1_v3;//cambio la refererncia porque voy descontando
 	(*eje).step_3_v3 = (*eje).distancia_v3 - (*eje).step_3_v3;
 
-	printf("%c: %10i->%10i, dis=%i, f_max: %i, f_acc: %i, f_min: %i\n",(*eje).char_name,(int)(*eje).steps_actual,(int)(*eje).steps_goto,(int)(*eje).distancia_v3,(int)(*eje).f_max_v3,(int)(*eje).f_acc_v3,(int)(*eje).f_min_v3);
+	//printf("%c: %10i->%10i, dis=%i, f_max: %i, f_acc: %i, f_min: %i\n",(*eje).char_name,(int)(*eje).steps_actual,(int)(*eje).steps_goto,(int)(*eje).distancia_v3,(int)(*eje).f_max_v3,(int)(*eje).f_acc_v3,(int)(*eje).f_min_v3);
 
 }
 

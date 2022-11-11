@@ -72,7 +72,7 @@ void morcom_read_line() {
 				} else if (char_command == 'F') {
 					G_code.F_value = int_command;
 					G_code.new_F_value = 1;
-				} else {
+				} else if(char_command == 'X' || char_command == 'Y' || char_command == 'Z' || char_command == 'B' || char_command == 'C') {
 					G_code.ej_value[G_code.N_ej] = dou_command;
 					G_code.char_ej_value[G_code.N_ej] = char_command;
 					G_code.new_ej_value[G_code.N_ej] = 1;
@@ -87,7 +87,7 @@ void morcom_read_line() {
 			}
 			palabra_actual = EU_getNextWord(&tamano_palabra);
 		}
-
+/*
 		printf("estado G_code:\n");
 		if (G_code.new_G_value)printf("    G%i\n", G_code.G_value);
 		if (G_code.new_M_value)printf("    M%i\n", G_code.M_value);
@@ -97,8 +97,8 @@ void morcom_read_line() {
 			print_double(G_code.ej_value[i]);
 			printf("\n");
 		}
-
-		if ((G_code.G_value == G_VALUE_MOV_MAX_VEL || G_code.G_value == G_VALUE_MOV_F_VEL) && G_code.new_M_value == 0) { //condicion para que haya movimiento
+*/
+		if ((G_code.G_value == G_VALUE_MOV_MAX_VEL || G_code.G_value == G_VALUE_MOV_F_VEL) && G_code.new_M_value == 0 && G_code.N_ej>0) { //condicion para que haya movimiento
 
 			if (G_code.F_value > 0 || G_code.G_value == G_VALUE_MOV_MAX_VEL) { //si se mueve a G0 o a G1 con F>0
 				uint8_t inter_XY = 0, inter_ZB = 0;
@@ -203,7 +203,7 @@ void morcom_read_line() {
 						default : break;
 						}
 					}
-					print_G0_fin_and_coordenadas();
+					//print_G0_fin_and_coordenadas();
 				} break;
 				}
 			}
