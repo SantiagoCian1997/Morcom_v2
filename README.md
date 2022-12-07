@@ -1,7 +1,7 @@
 # Morcom_v2
 Morcom_v2 es un firmware desarrollado para el control de máquinas pick and place, enfocado al movimiento de alta velocidad de los motores paso a paso respetando las curvas de aceleración, velocidad máxima y desaceleración. Pudiendo lograr frecuencias de hasta 110 kHz de frecuencia máxima en la salida de control de steps.
 
-**_Morcom _v2 is a firmware designed to control pick and place machines, focused on the high speed movement of stepper motors respecting the acceleration, maximum speed and deceleration curves. Being able to achieve frequencies of up to 110 kHz maximum frequency at the step control output._**
+**_Morcom v2 is a firmware designed to control pick and place machines, focused on the high speed movement of stepper motors respecting the acceleration, maximum speed and deceleration curves. Being able to achieve frequencies of up to 110 kHz maximum frequency at the step control output._**
 
 El proyecto se pensó para correr en un STM32F103 (72MHz) basado en un Cortex-M3, el cual es un uC muy barato y existen placas de desarrollo muy simples basados en el (Ej: STM32F103-bluepill board). De igual modo el proyecto, al estar desarrollado en C, se puede migrar a cualquier otro modelo de STM32 o cualquier otra arquitectura.
 
@@ -9,7 +9,7 @@ El proyecto se pensó para correr en un STM32F103 (72MHz) basado en un Cortex-M3
 
 Morcom_v2 fue pensado para usarlo en conjunto con [OpenPnP](https://openpnp.org/), utilizando líneas estándar de G code para su control, contando con rutinas de homing, parada de emergencia mediante finales de carrera y uso de coordenadas absolutas o relativas. 
 
-**_Morcom _v2 was designed to be used in conjunction with [OpenPnP](https://openpnp.org/), using standard G code lines for its control, with homing routines, emergency stop through limit switches and the use of absolute or relative coordinates._**
+**_Morcom v2 was designed to be used in conjunction with [OpenPnP](https://openpnp.org/), using standard G code lines for its control, with homing routines, emergency stop through limit switches and the use of absolute or relative coordinates._**
 
 ## Comandos G code / _G code commands_ 
 
