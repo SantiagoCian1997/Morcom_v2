@@ -91,7 +91,8 @@ uint16_t EU_getNWords(){
 	(*port_selected).initActualWordsInLine[(*port_selected).lastLine]=0;
 	while((*port_selected).buffer[(*port_selected).lastLine][indice] > ' ' && indice < (*port_selected).sizeLine[(*port_selected).lastLine]){
 		NWords++;
-		while((*port_selected).buffer[(*port_selected).lastLine][indice++]>' ');
+		while((*port_selected).buffer[(*port_selected).lastLine][indice++] >  ' ');
+		while((*port_selected).buffer[(*port_selected).lastLine][indice] == ' ') indice++; //para detectar mas de un espacio
 	}
 	(*port_selected).NWordsInLine[(*port_selected).lastLine]=NWords;
 	return (NWords);
@@ -110,8 +111,14 @@ uint16_t EU_getNWords(){
 uint8_t *EU_getNextWord(uint16_t *size){
 	uint16_t inicio=(*port_selected).initActualWordsInLine[(*port_selected).lastLine];
 	uint16_t fin=inicio;
-	while ((*port_selected).buffer[(*port_selected).lastLine][fin]>' ')fin++;
-	(*port_selected).initActualWordsInLine[(*port_selected).lastLine]=fin+1;
+	uint16_t space=0;
+	while ((*port_selected).buffer[(*port_selected).lastLine][fin] >  ' ')fin++;
+	uint16_t aux_fin=fin;
+	while ((*port_selected).buffer[(*port_selected).lastLine][aux_fin] == ' '){ //para detectar mas de un espacio
+		space++;
+		aux_fin++;
+	}
+	(*port_selected).initActualWordsInLine[(*port_selected).lastLine]=fin+space;
 	(*size)=fin-inicio;
 	return(&(*port_selected).buffer[(*port_selected).lastLine][inicio]);
 }

@@ -90,8 +90,8 @@ all: main-build
 main-build: Morcom_v2.elf secondary-outputs
 
 # Tool invocations
-Morcom_v2.elf Morcom_v2.map: $(OBJS) $(USER_OBJS) R:\Documentos\ RAID\PnP_mati\Morcom_v2\Morcom_v2_wrksp\Morcom_v2\STM32F103C8TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-g++ -o "Morcom_v2.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"R:\Documentos RAID\PnP_mati\Morcom_v2\Morcom_v2_wrksp\Morcom_v2\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Morcom_v2.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
+Morcom_v2.elf Morcom_v2.map: $(OBJS) $(USER_OBJS) C:\Users\santi\Documents\PnP_mati\Morcom_v2\Morcom_v2\STM32F103C8TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-g++ -o "Morcom_v2.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\santi\Documents\PnP_mati\Morcom_v2\Morcom_v2\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Morcom_v2.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

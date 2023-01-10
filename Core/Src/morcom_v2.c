@@ -23,6 +23,8 @@ struct eje_str X,Y,Z,B,C;
 struct eje_str *p_ejes[N_MOTORS];
 struct G_code_str G_code;
 
+uint8_t error_state=0;
+uint8_t send_G0_fin=0;
 /* Description:
  *			function in charge of implementing all the control of Morcom_v2
  * Parameters:
@@ -48,6 +50,7 @@ void morcom_run(){
  *
  */
 void morcom_read_line() {
+	send_G0_fin=0;
 	uint8_t N_palabras = EU_getNWords();
 	uint16_t tamano_palabra;
 	uint8_t *palabra_actual = EU_getNextWord(&tamano_palabra);
@@ -60,6 +63,14 @@ void morcom_read_line() {
 		int32_t int_command;
 		double  dou_command;
 		for (uint8_t LL = 0; LL < N_palabras; LL++) {
+
+			//printf("cantidad palabras:%i ",N_palabras);
+			//printf("palabra_N:%i ",LL);
+			//for(uint8_t test=0;test<tamano_palabra;test++){
+			//	printf("%c",palabra_actual[test]);
+			//}
+			//printf(" tamano:%i \n",tamano_palabra);
+
 			if (validate_G_code(tamano_palabra, palabra_actual)) {
 				get_G_code(tamano_palabra, palabra_actual, &char_command, &int_command, &dou_command);
 
@@ -120,11 +131,16 @@ void morcom_read_line() {
 					if (delta_X > delta_Y && delta_X < 10 * delta_Y)  Y.v_mov = (uint64_t)(((double)(Y.v_mov * delta_Y)) / ((double)delta_X));
 					if (delta_Y > delta_X && delta_Y < 10 * delta_X)  X.v_mov = (uint64_t)(((double)(X.v_mov * delta_X)) / ((double)delta_Y));
 				}
-				run_motors();
+				if(error_state==0){
+					run_motors();
+				}
 				print_G0_fin_and_coordenadas();
 			}
 		}
 		else { //no debe hacer movimiento
+			if (G_code.new_F_value == 1){
+				print_G0_fin_and_coordenadas();
+			}
 			if (G_code.new_G_value) {
 				switch (G_code.G_value) {
 				case G_VALUE_COORDENADAS_ABS: {       //modo coordenadas absolutas
@@ -137,13 +153,16 @@ void morcom_read_line() {
 				} break;
 				case G_VALUE_HOME_SECUENCIA: {        //secuencia de home
 					home_sequence();
+					error_state=0;
 					print_G0_fin_and_coordenadas();
+					printf("G28_fin\n");
 				} break;
 				case G_VALUE_SET_POSICION_ABS: {      //set posicion absoluta del sistema de coordenadas
 					for (uint8_t i = 0; i < G_code.N_ej; i++) {
 						(*G_code.p_eje[i]).steps_actual = G_code.ej_value[i] * (*G_code.p_eje[i]).step_mm;
 						(*G_code.p_eje[i]).steps_goto = (*G_code.p_eje[i]).steps_actual;
 					}
+					print_G0_fin_and_coordenadas();
 				} break;
 				default : {} break;
 				}
@@ -170,15 +189,30 @@ void morcom_read_line() {
 					print_G0_fin_and_coordenadas();
 				} break;
 				case M_VALUE_CONSULTA_SETS: {
-					printf("--Parametros actuales--\n");
+					printf("                   --Parametros actuales--\n");
 					printf("EJE  |V_max     |Acc       |step/mm    |%c_vel_min |neg_dir |\n", '%');
 					for (uint8_t i = 0; i < N_MOTORS; i++) {
 						printf("%c    |%10i|%10i|", (*p_ejes[i]).char_name, (int)(*p_ejes[i]).v_max, (int)(*p_ejes[i]).acc); print_double((*p_ejes[i]).step_mm); printf("|%10i|   %3i  |\n", (int)(*p_ejes[i]).porcentaje_v_min, (int)(*p_ejes[i]).invertir_direccion);
 					}
 					printf("HOME |act|dir|%c_vel|retroceso[mm]|ubicacion[mm]|prioridad|\n", '%');
 					for (uint8_t i = 0; i < N_MOTORS; i++) {
-						printf("%c    | %1i | %1i | %3i |  ", (*p_ejes[i]).char_name, (*p_ejes[i]).home_act, (*p_ejes[i]).home_dir, (*p_ejes[i]).home_porcentaje_vel); print_double((*p_ejes[i]).home_mm_retroceso); printf("|"); print_double((*p_ejes[i]).home_ubic_mm);  printf("|     %3i|\n", (*p_ejes[i]).home_prioridad);
+						printf("%c    | %1i | %1i | %3i |  ", (*p_ejes[i]).char_name, (*p_ejes[i]).home_act, (*p_ejes[i]).home_dir, (*p_ejes[i]).home_porcentaje_vel); print_double((*p_ejes[i]).home_mm_retroceso); printf("|  "); print_double((*p_ejes[i]).home_ubic_mm);  printf("|     %3i |\n", (*p_ejes[i]).home_prioridad);
 					}
+					printf("                                     --COMMANDS--\n");
+					printf("|G0:       Movement maximum speed          |G1:      Movement speed F#                                    |\n");
+					printf("|G28:      Homing sequence                 |G92:     Set absolute axis position                           |\n");
+					printf("|G90,M90:  Set absolute coordinates mode   |G91,M91: Set relative coordinates mode                        |\n");
+					printf("|M18:      Enable motors                   |M17:     Disable motors                                       |\n");
+					printf("|M100:     Print coordinates               |M999:    Request parameters and print help                    |\n");
+					printf("|M998:     Save the data in the flash      |                                                              |\n");
+					printf("|M1000:    Set maximum motor speed         |M1001:   Set acceleration of motors                           |\n");
+					printf("|M1002:    Set step per unit               |M1003:   Set minimum speed of the deceleration curve (%cV_max) |\n",'%');
+					printf("|M1004:    Invert Dir pin logic            |                                                              |\n");
+					printf("|M1010:    Activate axis homing sequence   |M1011:   Set home switch search direction                     |\n");
+					printf("|M1012:    Search speed (%cV_max)           |M1013:   Set back once the switch is located (in unit)        |\n",'%');
+					printf("|M1014:    Location after rollback is done |M1015:   Set home search priority                             |\n");
+					printf("|X,Y,Z,B,C:Axis modifiers                  |F:       Max movement speed modification                      |\n");
+					printf("\n");
 					print_G0_fin_and_coordenadas();
 				} break;
 				case M_VALUE_SAVE_SETS: {
@@ -209,6 +243,9 @@ void morcom_read_line() {
 			}
 		}
 	}
+	if(send_G0_fin==0){
+		print_G0_fin_and_coordenadas();
+	}
 	EU_getLine(NULL);
 }
 
@@ -225,7 +262,7 @@ void morcom_read_line() {
 void morcom_init() {
   HAL_GPIO_WritePin(Enable_motors_GPIO_Port, Enable_motors_Pin, 1);//apagar motores
   EU_init(&huart1);
-  printf("INIR MORCOM V2\n\n    send M999 for help and axes states\n");
+  printf("INIT MORCOM V2\n\n    send M999 for help and axes states\n");
 
   p_ejes[0] = &X;
   X.step_pin = Step_X_Pin; //puerto B
@@ -531,7 +568,7 @@ void RAM_to_vector(){
 		vector_interfaz_home[5+i]	=					(*p_ejes[i]).home_dir;
 		vector_interfaz_home[10+i]	=					(*p_ejes[i]).home_porcentaje_vel;
 		vector_interfaz_home[15+i]	=					(*p_ejes[i]).home_mm_retroceso;
-		vector_interfaz_home[20+i]	=					((uint32_t)((*p_ejes[i]).home_ubic_mm*1000000))-500000;
+		vector_interfaz_home[20+i]	=					((uint32_t)((*p_ejes[i]).home_ubic_mm*1000000))+500000;
 		vector_interfaz_home[25+i]	=					(*p_ejes[i]).home_prioridad;
 	}
 }
@@ -602,6 +639,10 @@ void set_vector(uint32_t index,uint32_t value){
  *			internal use
  */
 void print_G0_fin_and_coordenadas(){
+	if(error_state==1){
+		printf("Error home. Send G28\n");
+		return;
+	}
 	if(G_code.relative == 0) printf("Abs.");
 	else printf("Rel.");
 	for(uint8_t i=0; i<N_MOTORS; i++){
@@ -610,6 +651,7 @@ void print_G0_fin_and_coordenadas(){
 
 	}
 	printf("\nG0_fin\n");
+	send_G0_fin=1;
 }
 
 /* Description:

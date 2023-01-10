@@ -54,6 +54,13 @@ void home_sequence_axis(struct eje_str *eje){
 	HAL_GPIO_WritePin(GPIOB, (*eje).dir_pin, (*eje).home_dir);
 	if((*eje).invertir_direccion) HAL_GPIO_TogglePin(GPIOB, (*eje).dir_pin);
 
+	while(HAL_GPIO_ReadPin(GPIOA, (*eje).home_pin)){			//busco despulsar si esta pulsado (final opuesto)
+		HAL_GPIO_TogglePin(GPIOB, (*eje).step_pin);
+		for(uint32_t h=0; h<f_desp; h++){//delay
+			   	asm("NOP");
+			   	asm("NOP");
+		}
+	}
 	while(!HAL_GPIO_ReadPin(GPIOA, (*eje).home_pin)){			//busco hasta pulsar
 		HAL_GPIO_TogglePin(GPIOB, (*eje).step_pin);
 		for(uint32_t h=0; h<f_desp; h++){//delay
@@ -63,10 +70,11 @@ void home_sequence_axis(struct eje_str *eje){
 	}
 
 	HAL_GPIO_TogglePin(GPIOB, (*eje).dir_pin);
-	for(uint32_t h=0; h<2000000; h++){//delay
+	for(uint32_t h=0; h<1500000; h++){//delay
 	   	asm("NOP");
 	   	asm("NOP");
 	}
+
 
 	f_desp *= 4;
 	while(HAL_GPIO_ReadPin(GPIOA, (*eje).home_pin)){			//busco mas lento hasta despulsar

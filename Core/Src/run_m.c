@@ -11,7 +11,7 @@
 #include "run_m.h"
 
 extern struct eje_str *p_ejes[];
-
+extern uint8_t error_state;
 /* Description:
  *			checks the axes to be moved, initializes them and generates the movement
  * Parameters:
@@ -85,6 +85,7 @@ void axes_init(struct eje_str *eje){
 	}else{
 		(*eje).step_1_v3 = (*eje).distancia_v3/2;
 		(*eje).step_3_v3 = (*eje).distancia_v3 - (*eje).step_1_v3;
+		(*eje).step_1_v3++;
 	}
 	(*eje).step_1_v3 = (*eje).distancia_v3 - (*eje).step_1_v3;//cambio la refererncia porque voy descontando
 	(*eje).step_3_v3 = (*eje).distancia_v3 - (*eje).step_3_v3;
@@ -132,6 +133,7 @@ uint8_t check_limit_switch(struct eje_str *eje){
  */
 void e_stop_routine(){
 	printf("E Stop!\n");
+	error_state=1;
 	for(uint32_t h=0; h<1500000; h++){//delay
 		   	asm("NOP");
 		   	asm("NOP");
@@ -159,9 +161,9 @@ void run_1_motor(struct eje_str *ej0){
 
 
 
-		  if((*ej0).distancia_v3<(*ej0).step_3_v3){			//CASO 3
+		  if((*ej0).distancia_v3<(*ej0).step_3_v3){			//CASO 3 Desaceleracion
 			  (*ej0).f_actual_v3=(*ej0).f_cresta_v3-((*ej0).N_loop_desacc_v3*(*ej0).f_acc_v3)/factor_1;
-			  if((*ej0).f_actual_v3<=(*ej0).f_min_v3){		//CASO 4
+			  if((*ej0).f_actual_v3<=(*ej0).f_min_v3){		//CASO 4 V_min
 				  (*ej0).f_actual_v3=(*ej0).f_min_v3;
 				   	asm("NOP");
 				   	asm("NOP");
@@ -174,11 +176,11 @@ void run_1_motor(struct eje_str *ej0){
 				  (*ej0).N_loop_desacc_v3++;
 			  }
 		  }else{
-			 if((*ej0).distancia_v3>=(*ej0).step_1_v3){				//CASO 1
+			 if((*ej0).distancia_v3>=(*ej0).step_1_v3){				//CASO 1  Aceleracion
 			 			 (*ej0).f_actual_v3=((*ej0).N_loop_acc_v3*(*ej0).f_acc_v3)/factor_1;
 			 			 (*ej0).N_loop_acc_v3++;
 			 			 (*ej0).f_cresta_v3=(*ej0).f_actual_v3;
-			 }else{												//CASO 2
+			 }else{												//CASO 2   V_cte
 		 		(*ej0).f_actual_v3=(*ej0).f_max_v3;
 
 				(*ej0).null_operation_v3++;
